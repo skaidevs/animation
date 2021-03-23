@@ -22,7 +22,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         curve: Curves.easeIn,
       ),
     );
-    catController.forward();
   }
 
   Widget build(BuildContext context) {
@@ -30,8 +29,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       appBar: AppBar(
         title: Text('Animation'),
       ),
-      body: buildAnimation(),
+      body: GestureDetector(
+        onTap: onTap,
+        child: buildAnimation(),
+      ),
     );
+  }
+
+  void onTap() {
+    if (catController.status == AnimationStatus.completed) {
+      catController.reverse();
+    } else if (catController.status == AnimationStatus.dismissed) {
+      catController.forward();
+    }
   }
 
   Widget buildAnimation() {
