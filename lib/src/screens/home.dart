@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:animation/src/widgets/cat.dart';
 import 'package:flutter/material.dart';
 
@@ -9,9 +11,39 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   late Animation<double> catAnimation;
   late AnimationController catController;
+  late Animation<double> boxFlapAnimation;
+  late AnimationController boxFlapController;
 
   initState() {
     super.initState();
+
+    boxFlapController = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds: 500,
+      ),
+    );
+
+    boxFlapAnimation = Tween(
+      begin: pi * 0.6,
+      end: pi * 0.65,
+    ).animate(
+      CurvedAnimation(
+        parent: boxFlapController,
+        curve: Curves.linear,
+      ),
+    );
+
+    boxFlapAnimation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        boxFlapController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        boxFlapController.forward();
+      }
+    });
+
+    boxFlapController.forward();
+
     catController = new AnimationController(
       duration: Duration(
         milliseconds: 400,
@@ -35,11 +67,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         onTap: onTap,
         child: Center(
           child: Stack(
-            overflow: Overflow.visible,
+            clipBehavior: Clip.none,
             children: [
               buildCatAnimation(),
               buildBox(),
               buildLeftFlap(),
+              buildRightFlap(),
             ],
           ),
         ),
@@ -49,8 +82,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   void onTap() {
     if (catController.status == AnimationStatus.completed) {
+      boxFlapController.forward();
       catController.reverse();
     } else if (catController.status == AnimationStatus.dismissed) {
+      boxFlapController.stop();
       catController.forward();
     }
   }
@@ -64,10 +99,55 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   Widget buildLeftFlap() {
-    return Container(
-      height: 10,
-      width: 125,
-      color: Colors.red,
+    return Positioned(
+      left: 3.0,
+      child: AnimatedBuilder(
+        animation: boxFlapAnimation,
+        child: Container(
+          height: 10,
+          width: 125,
+          color: Colors.brown,
+        ),
+        builder: (context, child) {
+          return Transform.rotate(
+            alignment: Alignment.topLeft,
+            angle: boxFlapAnimation.value,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildRightFlap() {
+    return Positioned(
+      right: 3.0,
+      child: AnimatedBuilder(
+        animation: boxFlapAnimation,
+        child: Container(
+          height: 10,
+          width: 125,
+          color: Colors.brown,
+        ),
+        builder: (context, child) {
+          return Transform.rotate(
+            alignment: Alignment.topRight,
+            angle: -boxFlapAnimation.value + 0.2,
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildBoxTag() {
+    return Transform.rotate(
+      angle: pi / 12.0,
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        color: const Color(0xFFE8581C),
+        child: const Text('Apartment for rent!'),
+      ),
     );
   }
 
